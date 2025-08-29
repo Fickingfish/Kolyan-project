@@ -1,27 +1,45 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Exclude } from 'class-transformer';
+import { UserRole } from 'src/common/user-role.enum';
 
-@Entity()
+@Entity('users')
 export class User {
-  @BeforeInsert()
-  async hashPassword() {
-    if (this.password) {
-      this.password = await bcrypt.hash(this.password, 10)
-    }
-  }
-
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true })
   email: string;
 
   @Column()
+  @Exclude()
   password: string;
 
-  @Column({ nullable: true })
-  name: string;
+  @Column()
+  firstName: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column()
+  lastName: string;
+
+  @Column({ default: false })
+  isEmailConfirmed: boolean;
+
+  @Column({ 
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER 
+  })
+  role: UserRole;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  constructor(partial: Partial<User>) {
+    Object.assign(this, partial);
+  }
 }
