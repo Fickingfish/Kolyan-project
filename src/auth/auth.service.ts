@@ -6,8 +6,25 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../users/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { TokensDto } from './dto/tokens.dto';
+import { ConfigService } from '@nestjs/config';
+
+function parseJwtExpiresIn(expiresIn: string): number {
+  if (!expiresIn) return 900;
+
+  const unit = expiresIn.slice(-1);
+  const value = parseInt(expiresIn.slice(0, -1), 10);
+
+  if (isNaN(value)) return 900;
+
+  switch (unit) {
+    case 's': return value;
+    case 'm': return value * 60;
+    case 'h': return value * 60 * 60;
+    case 'd': return value * 24 * 60 * 60;
+    default: return 900;
+  }
+}
 
 @Injectable()
 export class AuthService {
@@ -15,6 +32,7 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<TokensDto> {
@@ -25,10 +43,9 @@ export class AuthService {
       throw new ConflictException('User with this email already exists');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
     const user = this.usersRepository.create({
       email,
-      password: hashedPassword,
+      password,
       firstName,
       lastName,
       isEmailConfirmed: false,
@@ -57,21 +74,13 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  async confirmEmail(confirmEmailDto: ConfirmEmailDto): Promise<void> {
-    // In real app, validate the token properly
-    const user = await this.usersRepository.findOne({ 
-      where: { email: confirmEmailDto.email } 
-    });
-
+  async activateUser(email: string): Promise<void> {
+    const user = await this.usersRepository.findOne({ where: { email } });
     if (!user) {
       throw new BadRequestException('User not found');
     }
 
-    if (user.isEmailConfirmed) {
-      throw new BadRequestException('Email already confirmed');
-    }
-
-    user.isEmailConfirmed = true;
+    user.isActive = true;
     await this.usersRepository.save(user);
   }
 
@@ -90,10 +99,18 @@ export class AuthService {
       role: user.role 
     };
 
+    const accessTokenExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m');
+    const refreshTokenExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
+
+    const accessToken = this.jwtService.sign(payload, { expiresIn: accessTokenExpiresIn });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: refreshTokenExpiresIn });
+
+    const expiresIn = parseJwtExpiresIn(accessTokenExpiresIn);
+
     return {
-      accessToken: this.jwtService.sign(payload, { expiresIn: '15m' }),
-      refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
-      expiresIn: 900,
+      accessToken,
+      refreshToken,
+      expiresIn,
     };
   }
 
