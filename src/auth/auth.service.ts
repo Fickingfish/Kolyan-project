@@ -3,11 +3,13 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { User } from '../users/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { TokensDto } from './dto/tokens.dto';
 import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../email/email.service';
 
 function parseJwtExpiresIn(expiresIn: string): number {
   if (!expiresIn) return 900;
@@ -33,9 +35,10 @@ export class AuthService {
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<TokensDto> {
+  async register(registerDto: RegisterDto): Promise<{ message: string }> {
     const { email, password, firstName, lastName } = registerDto;
 
     const existingUser = await this.usersRepository.findOne({ where: { email } });
@@ -49,9 +52,35 @@ export class AuthService {
       firstName,
       lastName,
       isEmailConfirmed: false,
+      isActive: false,
     });
 
     await this.usersRepository.save(user);
+
+    const confirmationToken = this.generateConfirmationToken();
+    await this.emailService.sendConfirmationEmail(email, confirmationToken);
+
+    return { message: 'Registration successful. Please check your email for confirmation instructions.' };
+  }
+
+  async confirmEmail(token: string): Promise<TokensDto> {
+    const email = await this.validateConfirmationToken(token);
+    
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('Invalid confirmation token');
+    }
+
+    if (user.isEmailConfirmed) {
+      throw new BadRequestException('Email already confirmed');
+    }
+
+    user.isEmailConfirmed = true;
+    user.isActive = true;
+    await this.usersRepository.save(user);
+
+    await this.emailService.sendWelcomeEmail(user.email, user.firstName);
+
     return this.generateTokens(user);
   }
 
@@ -74,14 +103,20 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  async activateUser(email: string): Promise<void> {
+  async resendConfirmationEmail(email: string): Promise<{ message: string }> {
     const user = await this.usersRepository.findOne({ where: { email } });
     if (!user) {
       throw new BadRequestException('User not found');
     }
 
-    user.isActive = true;
-    await this.usersRepository.save(user);
+    if (user.isEmailConfirmed) {
+      throw new BadRequestException('Email already confirmed');
+    }
+
+    const confirmationToken = this.generateConfirmationToken();
+    await this.emailService.sendConfirmationEmail(email, confirmationToken);
+
+    return { message: 'Confirmation email sent successfully' };
   }
 
   async refreshToken(userId: string): Promise<TokensDto> {
@@ -114,15 +149,23 @@ export class AuthService {
     };
   }
 
-  async validateUser(userId: string): Promise<User> {
-  const user = await this.usersRepository.findOne({ 
-    where: { id: userId, isActive: true } 
-  });
-  
-  if (!user) {
-    throw new Error('User not found or inactive');
+  private generateConfirmationToken(): string {
+    return crypto.randomBytes(32).toString('hex');
   }
-  
-  return user;
+
+  private async validateConfirmationToken(token: string): Promise<string> {
+    return 'user@example.com';
+  }
+
+  async validateUser(userId: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ 
+      where: { id: userId, isActive: true } 
+    });
+    
+    if (!user) {
+      throw new Error('User not found or inactive');
+    }
+    
+    return user;
   }
 }

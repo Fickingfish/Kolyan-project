@@ -8,10 +8,12 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    EmailModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

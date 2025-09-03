@@ -19,8 +19,13 @@ export class AuthController {
   @ApiBody({ type: RegisterDto })
   @ApiResponse({ 
     status: HttpStatus.CREATED, 
-    description: 'User successfully registered',
-    type: TokensDto 
+    description: 'User successfully registered. Confirmation email sent.',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Registration successful. Please check your email for confirmation instructions.' }
+      }
+    }
   })
   @ApiResponse({ 
     status: HttpStatus.CONFLICT, 
@@ -30,8 +35,61 @@ export class AuthController {
     status: HttpStatus.BAD_REQUEST, 
     description: 'Validation error' 
   })
-  async register(@Body() registerDto: RegisterDto): Promise<TokensDto> {
+  async register(@Body() registerDto: RegisterDto): Promise<{ message: string }> {
     return this.authService.register(registerDto);
+  }
+
+  @Post('confirm-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Confirm email address with token' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        token: { type: 'string', example: 'abc123def456...' }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: HttpStatus.OK, 
+    description: 'Email successfully confirmed',
+    type: TokensDto 
+  })
+  @ApiResponse({ 
+    status: HttpStatus.BAD_REQUEST, 
+    description: 'Invalid token or email already confirmed' 
+  })
+  async confirmEmail(@Body('token') token: string): Promise<TokensDto> {
+    return this.authService.confirmEmail(token);
+  }
+
+  @Post('resend-confirmation')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Resend confirmation email' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: HttpStatus.OK, 
+    description: 'Confirmation email sent successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Confirmation email sent successfully' }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: HttpStatus.BAD_REQUEST, 
+    description: 'User not found or email already confirmed' 
+  })
+  async resendConfirmation(@Body('email') email: string): Promise<{ message: string }> {
+    return this.authService.resendConfirmationEmail(email);
   }
 
   @Post('login')

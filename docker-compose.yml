@@ -1,25 +1,52 @@
 services:
   db:
-    image: postgres
-    restart: always
+    image: postgres:13
     environment:
-      - POSTGRES_PASSWORD=root
-    container_name: postgres
-    volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: nestjs
     ports:
-      - '5432:5432'
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  maildev:
+    image: maildev/maildev
+    ports:
+      - "1080:1080"   # Web interface
+      - "1025:1025"   # SMTP port
+    environment:
+      - MAILDEV_INCOMING_USER=admin
+      - MAILDEV_INCOMING_PASS=admin
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: nest-docker-postgres
-    environment:
-      - PORT=${PORT}
+    build: .
     ports:
-      - '3000:3000'
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=nestjs
+      - DB_SYNCHRONIZE=true
+      - DB_LOGGING=true
+      - JWT_SECRET=keeping_secrets_can_kill_you
+      - JWT_ACCESS_EXPIRES_IN=15m
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - APP_PORT=3000
+      - NODE_ENV=development
+      - SMTP_HOST=maildev
+      - SMTP_PORT=1025
+      - SMTP_SECURE=false
+      - SMTP_IGNORE_TLS=true
+      - EMAIL_FROM=noreply@example.com
     depends_on:
       - db
+      - maildev
     volumes:
-      - ./src:/app/src
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
