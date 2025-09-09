@@ -9,16 +9,13 @@ export class EmailService {
     private readonly configService: ConfigService,
   ) {}
 
-  async sendConfirmationEmail(email: string, token: string): Promise<void> {
-    const frontendUrl = this.configService.get('FRONTEND_URL');
-    const confirmationUrl = `${frontendUrl}/confirm-email?token=${token}`;
-
+  async sendConfirmationEmail(email: string, code: string): Promise<void> {
     await this.mailerService.sendMail({
       to: email,
-      subject: 'Confirm your email',
+      subject: 'Your confirmation code',
       template: 'confirm-email',
       context: {
-        confirmationUrl,
+        code,
         email,
       },
     });

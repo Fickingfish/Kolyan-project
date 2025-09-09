@@ -9,10 +9,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from 'src/email/email.module';
+import { ConfirmationToken } from 'src/users/entities/confirmation-token.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, ConfirmationToken]),
     EmailModule,
     PassportModule,
     JwtModule.registerAsync({

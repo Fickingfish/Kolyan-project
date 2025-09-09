@@ -40,57 +40,65 @@ export class AuthController {
   }
 
   @Post('confirm-email')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Confirm email address with token' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        token: { type: 'string', example: 'abc123def456...' }
+@HttpCode(HttpStatus.OK)
+@ApiOperation({ summary: 'Confirm email address with code' })
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      code: { 
+        type: 'string', 
+        example: '123456',
+        description: '6-digit confirmation code from email' 
       }
     }
-  })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
-    description: 'Email successfully confirmed',
-    type: TokensDto 
-  })
-  @ApiResponse({ 
-    status: HttpStatus.BAD_REQUEST, 
-    description: 'Invalid token or email already confirmed' 
-  })
-  async confirmEmail(@Body('token') token: string): Promise<TokensDto> {
-    return this.authService.confirmEmail(token);
   }
+})
+@ApiResponse({ 
+  status: HttpStatus.OK, 
+  description: 'Email successfully confirmed',
+  type: TokensDto 
+})
+@ApiResponse({ 
+  status: HttpStatus.BAD_REQUEST, 
+  description: 'Invalid code or email already confirmed' 
+})
+async confirmEmail(@Body('code') code: string): Promise<TokensDto> {
+  return this.authService.confirmEmail(code);
+}
 
-  @Post('resend-confirmation')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Resend confirmation email' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: { type: 'string', example: 'user@example.com' }
+@Post('resend-confirmation')
+@HttpCode(HttpStatus.OK)
+@ApiOperation({ summary: 'Resend confirmation code' })
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      email: { 
+        type: 'string', 
+        example: 'user@example.com',
+        description: 'Email to resend confirmation code to' 
       }
     }
-  })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
-    description: 'Confirmation email sent successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Confirmation email sent successfully' }
-      }
-    }
-  })
-  @ApiResponse({ 
-    status: HttpStatus.BAD_REQUEST, 
-    description: 'User not found or email already confirmed' 
-  })
-  async resendConfirmation(@Body('email') email: string): Promise<{ message: string }> {
-    return this.authService.resendConfirmationEmail(email);
   }
+})
+@ApiResponse({ 
+  status: HttpStatus.OK, 
+  description: 'Confirmation code sent successfully',
+  schema: {
+    type: 'object',
+    properties: {
+      message: { type: 'string', example: 'Confirmation code sent successfully' }
+    }
+  }
+})
+@ApiResponse({ 
+  status: HttpStatus.BAD_REQUEST, 
+  description: 'User not found or email already confirmed' 
+})
+async resendConfirmation(@Body('email') email: string): Promise<{ message: string }> {
+  return this.authService.resendConfirmationCode(email);
+}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)

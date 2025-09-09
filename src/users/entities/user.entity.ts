@@ -1,12 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, BeforeUpdate, BeforeInsert } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, BeforeUpdate, BeforeInsert, OneToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { UserRole } from 'src/common/user-role.enum';
 import * as bcrypt from 'bcrypt';
+import { ConfirmationToken } from './confirmation-token.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @OneToMany(() => ConfirmationToken, token => token.user)
+  confirmationTokens: ConfirmationToken[];
 
   @Column({ unique: true })
   email: string;
