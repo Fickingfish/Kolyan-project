@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,7 +15,7 @@ import { LoginDto } from './dto/login.dto';
 import { TokensDto } from './dto/tokens.dto';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
-import { ConfirmationToken } from 'src/users/entities/confirmation-token.entity';
+import { ConfirmationToken } from '../users/entities/confirmation-token.entity';
 
 function parseJwtExpiresIn(expiresIn: string): number {
   if (!expiresIn) return 900;
@@ -21,11 +26,16 @@ function parseJwtExpiresIn(expiresIn: string): number {
   if (isNaN(value)) return 900;
 
   switch (unit) {
-    case 's': return value;
-    case 'm': return value * 60;
-    case 'h': return value * 60 * 60;
-    case 'd': return value * 24 * 60 * 60;
-    default: return 900;
+    case 's':
+      return value;
+    case 'm':
+      return value * 60;
+    case 'h':
+      return value * 60 * 60;
+    case 'd':
+      return value * 24 * 60 * 60;
+    default:
+      return 900;
   }
 }
 
@@ -63,7 +73,9 @@ export class AuthService {
     const confirmationCode = await this.createConfirmationCode(user);
     await this.emailService.sendConfirmationEmail(email, confirmationCode.code);
 
-    return { message: 'Registration successful. Please check your email for confirmation instructions.' };
+    return {
+      message: 'Registration successful. Please check your email for confirmation instructions.',
+    };
   }
 
   private generateSixDigitCode(): string {
@@ -79,7 +91,7 @@ export class AuthService {
       code,
       email: user.email,
       expiresAt,
-      user,
+      userId: user.id,
     });
 
     return await this.confirmationTokensRepository.save(confirmationToken);
@@ -87,7 +99,7 @@ export class AuthService {
 
   async confirmEmail(code: string): Promise<TokensDto> {
     const email = await this.validateConfirmationCode(code);
-    
+
     const user = await this.usersRepository.findOne({ where: { email } });
     if (!user) {
       throw new BadRequestException('User not found');
@@ -109,7 +121,7 @@ export class AuthService {
   private async validateConfirmationCode(code: string): Promise<string> {
     const confirmationToken = await this.confirmationTokensRepository.findOne({
       where: { code },
-      relations: ['user']
+      relations: ['user'],
     });
 
     if (!confirmationToken) {
@@ -154,10 +166,8 @@ export class AuthService {
       throw new BadRequestException('Email already confirmed');
     }
 
-    // Удаляем старые коды
     await this.confirmationTokensRepository.delete({ email });
 
-    // Создаем новый код
     const confirmationCode = await this.createConfirmationCode(user);
     await this.emailService.sendConfirmationEmail(email, confirmationCode.code);
 
@@ -173,10 +183,10 @@ export class AuthService {
   }
 
   private generateTokens(user: User): TokensDto {
-    const payload = { 
-      sub: user.id, 
+    const payload = {
+      sub: user.id,
       email: user.email,
-      role: user.role 
+      role: user.role,
     };
 
     const accessTokenExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m');
@@ -199,14 +209,14 @@ export class AuthService {
   }
 
   async validateUser(userId: string): Promise<User> {
-    const user = await this.usersRepository.findOne({ 
-      where: { id: userId, isActive: true } 
+    const user = await this.usersRepository.findOne({
+      where: { id: userId, isActive: true },
     });
-    
+
     if (!user) {
       throw new Error('User not found or inactive');
     }
-    
+
     return user;
   }
 }

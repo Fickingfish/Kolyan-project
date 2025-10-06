@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { UserRole } from 'src/common/user-role.enum';
+import { UserRole } from '../../common/user-role.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UserResponseDto {
@@ -15,28 +15,28 @@ export class UserResponseDto {
   @ApiProperty({ description: 'Last name', example: 'Doe' })
   lastName: string;
 
-  @ApiProperty({ 
-    enum: UserRole, 
-    description: 'User role', 
-    example: UserRole.USER 
+  @ApiProperty({
+    enum: UserRole,
+    description: 'User role',
+    example: UserRole.USER,
   })
   role: UserRole;
 
-  @ApiProperty({ 
-    description: 'Account active status', 
-    example: true 
+  @ApiProperty({
+    description: 'Account active status',
+    example: true,
   })
   isActive: boolean;
 
-  @ApiProperty({ 
-    description: 'Creation date', 
-    example: '2025-01-15T10:30:00.000Z' 
+  @ApiProperty({
+    description: 'Creation date',
+    example: '2025-01-15T10:30:00.000Z',
   })
   createdAt: Date;
 
-  @ApiProperty({ 
-    description: 'Last update date', 
-    example: '2025-01-15T10:30:00.000Z' 
+  @ApiProperty({
+    description: 'Last update date',
+    example: '2025-01-15T10:30:00.000Z',
   })
   updatedAt: Date;
 

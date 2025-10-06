@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 
 @Entity('confirmation_tokens')
 export class ConfirmationToken {
@@ -18,8 +17,8 @@ export class ConfirmationToken {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, user => user.confirmationTokens, { onDelete: 'CASCADE' })
-  user: User;
+  // @ManyToOne('User', 'confirmationTokens', { onDelete: 'CASCADE' })
+  // user: any;
 
   @Column()
   userId: string;
@@ -28,3 +27,5 @@ export class ConfirmationToken {
     return new Date() < this.expiresAt;
   }
 }
+
+// import { User } from '../../users/entities/user.entity';

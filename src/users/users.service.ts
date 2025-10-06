@@ -56,10 +56,10 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    
+
     if (updateUserDto.email && updateUserDto.email !== user.email) {
-      const existingUser = await this.usersRepository.findOne({ 
-        where: { email: updateUserDto.email } 
+      const existingUser = await this.usersRepository.findOne({
+        where: { email: updateUserDto.email },
       });
       if (existingUser) {
         throw new ConflictException('User with this email already exists');

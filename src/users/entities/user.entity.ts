@@ -1,16 +1,24 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, BeforeUpdate, BeforeInsert, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeUpdate,
+  BeforeInsert,
+  //OneToMany,
+} from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { UserRole } from 'src/common/user-role.enum';
+import { UserRole } from '../../common/user-role.enum';
 import * as bcrypt from 'bcrypt';
-import { ConfirmationToken } from './confirmation-token.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToMany(() => ConfirmationToken, token => token.user)
-  confirmationTokens: ConfirmationToken[];
+  //@OneToMany('ConfirmationToken', 'user')
+  //confirmationTokens: any;
 
   @Column({ unique: true })
   email: string;
@@ -28,10 +36,10 @@ export class User {
   @Column({ default: false })
   isEmailConfirmed: boolean;
 
-  @Column({ 
+  @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.USER 
+    default: UserRole.USER,
   })
   role: UserRole;
 
@@ -65,3 +73,5 @@ export class User {
     return await bcrypt.compare(attempt, this.password);
   }
 }
+
+// import { ConfirmationToken } from './confirmation-token.entity';

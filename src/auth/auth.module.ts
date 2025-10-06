@@ -8,8 +8,8 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
-import { EmailModule } from 'src/email/email.module';
-import { ConfirmationToken } from 'src/users/entities/confirmation-token.entity';
+import { EmailModule } from '../email/email.module';
+import { ConfirmationToken } from '../users/entities/confirmation-token.entity';
 
 @Module({
   imports: [
@@ -21,8 +21,8 @@ import { ConfirmationToken } from 'src/users/entities/confirmation-token.entity'
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { 
-          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRES_IN') 
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRES_IN'),
         },
       }),
     }),
