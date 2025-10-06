@@ -3,11 +3,14 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { User } from '../users/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { TokensDto } from './dto/tokens.dto';
 import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../email/email.service';
+import { ConfirmationToken } from 'src/users/entities/confirmation-token.entity';
 
 function parseJwtExpiresIn(expiresIn: string): number {
   if (!expiresIn) return 900;
@@ -31,11 +34,14 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(ConfirmationToken)
+    private confirmationTokensRepository: Repository<ConfirmationToken>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<TokensDto> {
+  async register(registerDto: RegisterDto): Promise<{ message: string }> {
     const { email, password, firstName, lastName } = registerDto;
 
     const existingUser = await this.usersRepository.findOne({ where: { email } });
@@ -49,10 +55,74 @@ export class AuthService {
       firstName,
       lastName,
       isEmailConfirmed: false,
+      isActive: false,
     });
 
     await this.usersRepository.save(user);
+
+    const confirmationCode = await this.createConfirmationCode(user);
+    await this.emailService.sendConfirmationEmail(email, confirmationCode.code);
+
+    return { message: 'Registration successful. Please check your email for confirmation instructions.' };
+  }
+
+  private generateSixDigitCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  private async createConfirmationCode(user: User): Promise<ConfirmationToken> {
+    const code = this.generateSixDigitCode();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    const confirmationToken = this.confirmationTokensRepository.create({
+      code,
+      email: user.email,
+      expiresAt,
+      user,
+    });
+
+    return await this.confirmationTokensRepository.save(confirmationToken);
+  }
+
+  async confirmEmail(code: string): Promise<TokensDto> {
+    const email = await this.validateConfirmationCode(code);
+    
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    if (user.isEmailConfirmed) {
+      throw new BadRequestException('Email already confirmed');
+    }
+
+    user.isEmailConfirmed = true;
+    user.isActive = true;
+    await this.usersRepository.save(user);
+
+    await this.emailService.sendWelcomeEmail(user.email, user.firstName);
+
     return this.generateTokens(user);
+  }
+
+  private async validateConfirmationCode(code: string): Promise<string> {
+    const confirmationToken = await this.confirmationTokensRepository.findOne({
+      where: { code },
+      relations: ['user']
+    });
+
+    if (!confirmationToken) {
+      throw new BadRequestException('Invalid confirmation code');
+    }
+
+    if (!confirmationToken.isValid()) {
+      await this.confirmationTokensRepository.remove(confirmationToken);
+      throw new BadRequestException('Confirmation code has expired');
+    }
+
+    await this.confirmationTokensRepository.remove(confirmationToken);
+    return confirmationToken.email;
   }
 
   async login(loginDto: LoginDto): Promise<TokensDto> {
@@ -74,14 +144,24 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  async activateUser(email: string): Promise<void> {
+  async resendConfirmationCode(email: string): Promise<{ message: string }> {
     const user = await this.usersRepository.findOne({ where: { email } });
     if (!user) {
       throw new BadRequestException('User not found');
     }
 
-    user.isActive = true;
-    await this.usersRepository.save(user);
+    if (user.isEmailConfirmed) {
+      throw new BadRequestException('Email already confirmed');
+    }
+
+    // Удаляем старые коды
+    await this.confirmationTokensRepository.delete({ email });
+
+    // Создаем новый код
+    const confirmationCode = await this.createConfirmationCode(user);
+    await this.emailService.sendConfirmationEmail(email, confirmationCode.code);
+
+    return { message: 'Confirmation code sent successfully' };
   }
 
   async refreshToken(userId: string): Promise<TokensDto> {
@@ -114,15 +194,19 @@ export class AuthService {
     };
   }
 
-  async validateUser(userId: string): Promise<User> {
-  const user = await this.usersRepository.findOne({ 
-    where: { id: userId, isActive: true } 
-  });
-  
-  if (!user) {
-    throw new Error('User not found or inactive');
+  private generateConfirmationToken(): string {
+    return crypto.randomBytes(32).toString('hex');
   }
-  
-  return user;
+
+  async validateUser(userId: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ 
+      where: { id: userId, isActive: true } 
+    });
+    
+    if (!user) {
+      throw new Error('User not found or inactive');
+    }
+    
+    return user;
   }
 }
