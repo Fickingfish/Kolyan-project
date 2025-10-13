@@ -3,13 +3,33 @@
 <head>
     <meta charset="utf-8">
     <title>Confirmation Code</title>
+    <style>
+        .code { 
+            font-size: 32px; 
+            letter-spacing: 5px; 
+            color: #2563eb; 
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .container {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Email Confirmation</h2>
-    <p>Hello!</p>
-    <p>Your confirmation code is:</p>
-    <h1 style="font-size: 32px; letter-spacing: 5px; color: #2563eb;">{{code}}</h1>
-    <p>This code will expire in 24 hours.</p>
-    <p>If you didn't request this code, please ignore this email.</p>
+    <div class="container">
+        <h2>Email Confirmation</h2>
+        <p>Hello!</p>
+        <p>Your confirmation code is:</p>
+        <div class="code">{{code}}</div>
+        <p>This code will expire in 24 hours.</p>
+        <p>If you didn't request this code, please ignore this email.</p>
+    </div>
 </body>
 </html>
