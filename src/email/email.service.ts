@@ -15,7 +15,7 @@ export class EmailService {
       subject: 'Your confirmation code',
       template: 'confirm-email',
       context: {
-        code,
+        code: code,
         email,
       },
     });

@@ -61,6 +61,7 @@ export class AuthService {
     await this.usersRepository.save(user);
 
     const confirmationCode = await this.createConfirmationCode(user);
+    // console.log('Generated code:', confirmationCode.code);
     await this.emailService.sendConfirmationEmail(email, confirmationCode.code);
 
     return { message: 'Registration successful. Please check your email for confirmation instructions.' };
@@ -109,7 +110,6 @@ export class AuthService {
   private async validateConfirmationCode(code: string): Promise<string> {
     const confirmationToken = await this.confirmationTokensRepository.findOne({
       where: { code },
-      relations: ['user']
     });
 
     if (!confirmationToken) {
