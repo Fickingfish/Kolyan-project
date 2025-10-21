@@ -1,30 +1,24 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { User } from "./user.entity";
-import { Task } from "./task.entity";
+import { Task } from "./tasks.entity";
+import { User } from "src/users/entities/user.entity";
 
-@Entity('comments')
-export class Comment {
+@Entity()
+export class Comment{
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'text' })
+    @Column('text')
     content: string;
-
-    @ManyToOne(() => User, user => user.comments)
-    author: User;
-
-    @Column()
-    authorId: string;
 
     @ManyToOne(() => Task, task => task.comments)
     task: Task;
 
-    @Column()
-    taskId: string;
+    @ManyToOne(() => User)
+    author: User;
 
     @CreateDateColumn()
     createdAt: Date;
 
     @UpdateDateColumn()
-    updatedAt: Date;
+    updatedAt: Date
 }

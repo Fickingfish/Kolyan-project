@@ -1,30 +1,27 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Board } from './board.entity';
-import { Task } from './task.entity';
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Board } from "./board.entity";
+import { Task } from "./tasks.entity";
 
-@Entity('columns')
-export class ColumnEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+@Entity()
+export class Status {
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-  @Column()
-  name: string;
+    @Column()
+    name: string;
 
-  @Column()
-  position: number;
+    @Column({ default: 0 })
+    order: number
 
-  @ManyToOne(() => Board, board => board.columns)
-  board: Board;
+    @ManyToOne(() => Board, board => board.statuses)
+    board: Board;
 
-  @Column()
-  boardId: string;
+    @OneToMany(() => Task, task => task.status, { cascade: true })
+    tasks: Task[];
 
-  @OneToMany(() => Task, task => task.column, { cascade: true })
-  tasks: Task[];
+    @CreateDateColumn()
+    createdAt: Date;
 
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+    @UpdateDateColumn()
+    updatedAt: Date;
 }

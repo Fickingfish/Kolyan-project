@@ -1,34 +1,24 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { User } from './user.entity';
-import { ColumnEntity as BoardColumn } from './column.entity';
+import { Column, CreateDateColumn, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Project } from "./project.entity";
+import { Status } from "./column.entity";
 
-@Entity('boards')
+@Entity()
 export class Board {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-  @Column()
-  name: string;
+    @Column()
+    name: string;
 
-  @Column({ nullable: true })
-  description: string;
+    @ManyToOne(() => Project, project => project.boards)
+    project: Project;
 
-  @ManyToOne(() => User, user => user.ownedBoards)
-  owner: User;
+    @OneToMany(() => Status, status => status.board, { cascade: true })
+    statuses: Status[];
 
-  @Column()
-  ownerId: string;
+    @CreateDateColumn()
+    createdAt: Date;
 
-  @ManyToMany(() => User, user => user.boards)
-  @JoinTable()
-  members: User[];
-
-  @OneToMany(() => BoardColumn, column => column.board, { cascade: true })
-  columns: BoardColumn[];
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+    @UpdateDateColumn()
+    updatedAt: Date;
 }

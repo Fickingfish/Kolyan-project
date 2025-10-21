@@ -28,10 +28,5 @@ async function bootstrap() {
   await app.listen(3001);
   console.log(`Aplication is running on: http://localhost:3001`)
   console.log(`Swagger is running on: http://localhost:3001/api`)
-
-  // console.log('[DEBUG] process.env.PORT:', process.env.PORT);
-
-  // const app = await NestFactory.create(AppModule);
-  // await app.listen(Number(process.env.PORT) || 3000);
 }
 bootstrap();    
