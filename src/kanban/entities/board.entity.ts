@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Project } from "./project.entity";
-import { Status } from "./column.entity";
+import { Status } from "./status.entity";
 
 @Entity()
 export class Board {

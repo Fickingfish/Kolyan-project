@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { Status } from "./column.entity";
+import { Status } from "./status.entity";
 import { User } from "src/users/entities/user.entity";
 import { Comment } from "./comment.entity";
 
