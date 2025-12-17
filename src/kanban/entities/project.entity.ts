@@ -1,6 +1,7 @@
 import { User } from "src/users/entities/user.entity";
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Board } from "./board.entity";
+import { Invitation } from "./invitation.entity";
 
 @Entity()
 export class Project {
@@ -13,19 +14,32 @@ export class Project {
     @Column({ type: 'text', nullable: true })
     description: string;
 
-    @ManyToOne(() => User, user => user.createdProjects)
-    owner: User;
+      @ManyToOne(() => User, user => user.createdProjects)
+  owner: User;
 
-    @ManyToMany(() => User, user => user.joinedProject)
-    @JoinTable()
-    members: User[];
+  @ManyToMany(() => User, user => user.joinedProjects)
+  @JoinTable({
+    name: 'project_members_user',
+    joinColumn: {
+      name: 'projectId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'userId', 
+      referencedColumnName: 'id',
+    },
+  })
+  members: User[];
 
-    @OneToMany(() => Board, board => board.project)
-    boards: Board[];
+  @OneToOne(() => Board, board => board.project)
+  board: Board;
 
-    @CreateDateColumn()
-    createdAt: Date;
+  @OneToMany(() => Invitation, invitation => invitation.project)
+  invitations: Invitation[];
 
-    @UpdateDateColumn()
-    updatedAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

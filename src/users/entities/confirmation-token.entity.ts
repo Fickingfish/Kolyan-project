@@ -18,7 +18,10 @@ export class ConfirmationToken {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, user => user.confirmationTokens, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, user => user.confirmationTokens, { 
+    onDelete: 'CASCADE',
+    nullable: true 
+  })
   user: User;
 
   @Column()

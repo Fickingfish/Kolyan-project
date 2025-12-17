@@ -31,7 +31,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
           from: configService.get('EMAIL_FROM', '"No Reply" <noreply@example.com>'),
         },
         template: {
-          dir: join(__dirname, 'email', 'templates'),
+          dir: join(process.cwd(), 'dist', 'src', 'email', 'templates'),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
@@ -52,8 +52,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
         username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User],
-        synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true',
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: false,
         logging: configService.get<string>('DB_LOGGING') === 'true',
         retryDelay: 3000,
         retryAttempts: 10,
@@ -65,3 +65,5 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
   ],
 })
 export class AppModule {}
+
+//configService.get<string>('DB_SYNCHRONIZE') === 'true'

@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Project } from "./project.entity";
 import { Status } from "./status.entity";
 
@@ -7,10 +7,8 @@ export class Board {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
-    name: string;
-
-    @ManyToOne(() => Project, project => project.boards)
+    @OneToOne(() => Project, project => project.board)
+    @JoinColumn()
     project: Project;
 
     @OneToMany(() => Status, status => status.board, { cascade: true })

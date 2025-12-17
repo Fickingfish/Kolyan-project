@@ -32,4 +32,26 @@ export class EmailService {
       },
     });
   }
-}
+
+  async sendInvitationEmail(
+  email: string, 
+  projectName: string, 
+  inviterName: string,
+  acceptUrl: string,
+  declineUrl: string,
+  expiresAt: Date
+): Promise<void> {
+  await this.mailerService.sendMail({
+    to: email,
+    subject: `Invitation to project: ${projectName}`,
+    template: 'invitation',
+    context: {
+      projectName,
+      inviterName,
+      acceptUrl,
+      declineUrl,
+      expiresAt: expiresAt.toLocaleDateString(),
+    }
+    });
+  }
+} 

@@ -4,7 +4,7 @@ import { UserRole } from 'src/common/user-role.enum';
 import * as bcrypt from 'bcrypt';
 import { ConfirmationToken } from './confirmation-token.entity';
 import { Project } from 'src/kanban/entities/project.entity';
-import { Task } from 'src/kanban/entities/tasks.entity';
+import { Task } from 'src/kanban/entities/task.entity';
 import { Comment } from 'src/kanban/entities/comment.entity';
 
 @Entity('users')
@@ -55,13 +55,13 @@ export class User {
   createdProjects: Project[];
 
   @ManyToMany(() => Project, project => project.members)
-  joinedProject: Project[];
+  joinedProjects: Project[];
 
   @OneToMany(() => Task, task => task.assignee)
-  assignedTask: Task[];
+  assignedTasks: Task[];
 
   @OneToMany(() => Task, task => task.creator)
-  createdTask: Task[];
+  createdTasks: Task[];
 
   @OneToMany(() => Comment, comment => comment.author)
   comments: Comment[]
